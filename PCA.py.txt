@@ -1,0 +1,66 @@
+import gensim
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.decomposition import PCA
+
+
+# Load preprocessed text
+with open("urdu_words.txt", "r", encoding="utf-8") as f:
+    text = f.read().splitlines()
+
+# Train Skip-Gram model
+sg_model = gensim.models.Word2Vec(
+    sentences=[text],
+    vector_size=100,
+    window=5,
+    min_count=5,
+    workers=4,
+    sg=1,
+    epochs=5
+)
+
+# Train Continuous-Bag-of-Words model
+cbow_model = gensim.models.Word2Vec(
+    sentences=[text],
+    vector_size=100,
+    window=5,
+    min_count=5,
+    workers=4,
+    sg=0,
+    epochs=5
+)
+
+# Find associations and similarities between words
+word1 = "سیاست"
+word2 = "کرکٹ"
+similarity = cosine_similarity([sg_model.wv[word1]], [sg_model.wv[word2]])[0][0]
+print(f"Cosine similarity between '{word1}' and '{word2}' using Skip-Gram model: {similarity}")
+
+similarity = cosine_similarity([cbow_model.wv[word1]], [cbow_model.wv[word2]])[0][0]
+print(f"Cosine similarity between '{word1}' and '{word2}' using Continuous-Bag-of-Words model: {similarity}")
+
+words = ["سیاست", "کرکٹ", "پاکستان", "اسٹارٹ", "بیٹی", "ریاست"]
+word_vectors_sg = sg_model.wv[words]
+word_vectors_cbow = cbow_model.wv[words]
+
+pca_sg = PCA(n_components=2)
+pca_cbow = PCA(n_components=2)
+
+pca_sg.fit(word_vectors_sg)
+pca_cbow.fit(word_vectors_cbow)
+
+sg_pca_vectors = pca_sg.transform(word_vectors_sg)
+cbow_pca_vectors = pca_cbow.transform(word_vectors_cbow)
+
+plt.figure(figsize=(10, 10))
+sns.scatterplot(x=sg_pca_vectors[:, 0], y=sg_pca_vectors[:, 1], hue=words)
+plt.title("PCA visualization of word embeddings using Skip-Gram model")
+plt.savefig("Skip-Gram.png")
+
+plt.figure(figsize=(10, 10))
+sns.scatterplot(x=cbow_pca_vectors[:, 0], y=cbow_pca_vectors[:, 1], hue=words)
+plt.title("PCA visualization of word embeddings using Continuous-Bag-of-Words model")
+plt.savefig("Continous Bag of Words.png")
+

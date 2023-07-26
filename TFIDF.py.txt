@@ -1,0 +1,21 @@
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+#Load the Cleaned Urdu text from a file 
+with open('urdu_words_TD-IDF.txt', 'r', encoding='utf-8') as f:
+   urdu_words = f.read().splitlines()
+
+# Create a TfidfVectorizer object and fit_transform on the Urdu text
+vectorizer = TfidfVectorizer()
+tfidf = vectorizer.fit_transform(urdu_words)
+
+# Get the feature names and their corresponding TF-IDF scores
+feature_names = vectorizer.get_feature_names_out()
+tfidf_scores = tfidf.toarray()
+
+# Get the top 10 words with the highest TF-IDF scores
+top_indices = tfidf_scores.mean(axis=0).argsort()[-10:][::-1]
+top_words = [feature_names[i] for i in top_indices]
+
+# print the top important words according to TF-IDF
+print("Top 10 important words according to TF-IDF:")
+print(top_words)

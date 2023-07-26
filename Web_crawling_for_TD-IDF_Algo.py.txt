@@ -1,0 +1,48 @@
+import os
+import requests
+from bs4 import BeautifulSoup
+import re
+
+# Define the URLs to crawl
+urls = ['https://www.bbc.com/urdu']
+
+# Initialize an empty list to store the words
+urdu_words = []
+
+# Crawl the webpages and extract the text
+for url in urls:
+    # Make a request to the webpage
+    response = requests.get(url)
+    # Extract the HTML content from the response
+    html_content = response.content
+    # Create a BeautifulSoup object to parse the HTML content
+    soup = BeautifulSoup(html_content, 'html.parser')
+    # Find all the text content in the webpage
+    text = soup.get_text()
+    # Remove non-Urdu characters
+    urdu_text = re.sub(r'[^\u0600-\u06FF\s]', '', text)
+    # Split the text into words and add to the list
+    urdu_words += urdu_text.split()
+
+# Remove duplicates
+urdu_words = list(set(urdu_words))
+
+# Remove punctuations
+punctuations = '''!()-[]{};:'"\,<>./?@#$%^&*_~'''
+for i in range(len(urdu_words)):
+    urdu_words[i] = urdu_words[i].translate(str.maketrans('', '', punctuations))
+
+# Remove empty strings and numbers
+urdu_words = [word for word in urdu_words if word and not word.isdigit()]
+
+# Write the words to a text file
+with open('urdu_words_TD-IDF.txt', 'w', encoding='utf-8') as f:
+    for word in urdu_words:
+        f.write(word + '\n')
+
+# Remove non-Urdu words
+with open('urdu_words_TD-IDF.txt', 'r', encoding='utf-8') as f:
+    valid_words = set(line.strip() for line in f)
+urdu_words = [word for word in urdu_words if word in valid_words]
+
+print('Total Urdu words:', len(urdu_words))
